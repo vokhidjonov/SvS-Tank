@@ -21,7 +21,7 @@ It includes interactive elements, styling and sound features.
 ## Live website
 
 You can view the website here:
-https://username.github.io/my-website/
+https://vokhidjonov.github.io/SvS-Tank/
 
 ## License
 

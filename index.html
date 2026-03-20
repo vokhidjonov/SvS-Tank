@@ -7,16 +7,22 @@
 <style>
 body{
 margin:0;
-background:white;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+overflow:hidden;
+background:black;
 }
 
 canvas{
 background:#eeeeee;
-border:4px solid black;
+display:block;
+}
+
+footer{
+position:absolute;
+bottom:10px;
+width:100%;
+text-align:center;
+color:rgb(255, 0, 0);
+font-size:14px;
 }
 </style>
 </head>
@@ -34,6 +40,8 @@ border:4px solid black;
 const canvas=document.getElementById("game")
 const ctx=canvas.getContext("2d")
 
+window.addEventListener("resize",resizeCanvas)
+
 let shootSound = new Audio("shoot.mp3")
 
 let player,bot
@@ -43,8 +51,25 @@ let gameOver=false
 let resultText=""
 let gameState="menu"
 
-const mapWidth = 900
-const mapHeight = 550
+let playerHPDisplay = 10
+let botHPDisplay = 10
+
+const maxHP = 10
+
+let mapWidth = canvas.width
+let mapHeight = canvas.height
+
+function resizeCanvas(){
+
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+
+mapWidth = canvas.width
+mapHeight = canvas.height
+
+}
+
+resizeCanvas()
 
 let walls=[
 {x:350,y:200,w:200,h:20},
@@ -80,6 +105,9 @@ bot={x:450,y:50,size:30,angle:Math.PI/2,hp:10}
 bullets=[]
 gameOver=false
 resultText=""
+
+playerHPDisplay = player.hp
+botHPDisplay = bot.hp
 
 generateNavPoints()
 
@@ -173,8 +201,13 @@ let my=e.clientY-rect.top
 // menu bo‘lsa PLAY tekshiramiz
 if(gameState==="menu"){
 
-if(mx>350 && mx<550 && my>300 && my<370){
-
+if(
+mx > canvas.width/2-100 &&
+mx < canvas.width/2+100 &&
+my > 300 &&
+my < 370
+)
+{
 gameState="game"
 resetGame()
 
@@ -413,7 +446,7 @@ b.x<player.x+15 &&
 b.y>player.y-15 &&
 b.y<player.y+15
 ){
-player.hp--
+player.hp = Math.max(0, player.hp-1)
 return false
 }
 
@@ -427,7 +460,7 @@ b.x<bot.x+15 &&
 b.y>bot.y-15 &&
 b.y<bot.y+15
 ){
-bot.hp--
+bot.hp = Math.max(0, bot.hp-1)
 return false
 }
 
@@ -498,13 +531,62 @@ ctx.fillRect(w.x,w.y,w.w,w.h)
 
 }
 
+function getHPColor(percent){
+
+let r = Math.floor(255*(1-percent))
+let g = Math.floor(120*percent)
+let b = Math.floor(255*percent)
+
+return `rgb(${r},${g},${b})`
+
+}
+
 function drawHP(){
 
-ctx.fillStyle="black"
-ctx.font="16px Arial"
+// smooth animation
+playerHPDisplay += (player.hp - playerHPDisplay)*0.1
+botHPDisplay += (bot.hp - botHPDisplay)*0.1
 
-ctx.fillText("PLAYER HP: "+player.hp,20,20)
-ctx.fillText("BOT HP: "+bot.hp,760,20)
+let barWidth = 300
+let barHeight = 18
+
+// PLAYER (chap)
+let px = 30
+let py = 30
+
+let pPercent = Math.max(0, playerHPDisplay/maxHP)
+let playerColor = getHPColor(pPercent)
+let pWidth = Math.max(0, barWidth*pPercent)
+
+ctx.fillStyle=playerColor
+ctx.font="16px Arial"
+ctx.textAlign="left"
+ctx.fillText("PLAYER",px,py)
+
+ctx.fillStyle="#333"
+ctx.fillRect(px,py+8,barWidth,barHeight)
+
+ctx.fillStyle=getHPColor(pPercent)
+ctx.fillRect(px,py+8,pWidth,barHeight)
+
+
+// BOT (o‘ng)
+let bx = canvas.width - barWidth - 30
+let by = 30
+
+let bPercent = Math.max(0, botHPDisplay/maxHP)
+let botColor = getHPColor(bPercent)
+let bWidth = Math.max(0, barWidth*bPercent)
+
+ctx.textAlign="right"
+ctx.fillStyle=botColor
+ctx.fillText("OPPONENT",canvas.width-30,by)
+
+ctx.fillStyle="#333"
+ctx.fillRect(bx,by+8,barWidth,barHeight)
+
+ctx.fillStyle=getHPColor(bPercent)
+ctx.fillRect(bx,by+8,bWidth,barHeight)
 
 }
 
@@ -530,14 +612,14 @@ ctx.fillStyle="white"
 ctx.font="60px Arial"
 ctx.textAlign="center"
 
-ctx.fillText("TANK BATTLE",450,200)
+ctx.fillText("TANK BATTLE",canvas.width/2,200)
 
 ctx.fillStyle="green"
-ctx.fillRect(350,300,200,70)
+ctx.fillRect(canvas.width/2-100,300,200,70)
 
 ctx.fillStyle="white"
 ctx.font="30px Arial"
-ctx.fillText("PLAY",450,345)
+ctx.fillText("PLAY",canvas.width/2,345)
 
 }
 
